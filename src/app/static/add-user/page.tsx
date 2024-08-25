@@ -1,16 +1,22 @@
-import AddUserForm from "./components/AddUserForm"
-import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination, TextField, Container, tableCellClasses} from '@mui/material';
-
+import AddUserForm from "./components/AddUserForm";
+import { Container, Box } from "@mui/material";
+import { GoToButton } from "@/src/components/static/GoToButton";
 
 const AddUserPage = () => {
   return (
     <Container>
-        <Paper sx={{ p: 5, mt: 5 }}>
-            <h2>Add user</h2>
-            <AddUserForm />
-        </Paper>
+      <AddUserForm />
+      <Box
+        sx={{
+          textAlign: "center",
+          marginTop: 2,
+          marginBottom: 2,
+        }}
+      >
+        <GoToButton href="/static" text="Go to all users" />
+      </Box>
     </Container>
-  )
-}
+  );
+};
 
 export default AddUserPage;

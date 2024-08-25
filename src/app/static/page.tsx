@@ -1,4 +1,5 @@
 "use client";
+
 import { NextPage } from "next";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -15,6 +16,10 @@ import {
   TextField,
   Container,
   tableCellClasses,
+  Button,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,8 +30,9 @@ import { useRouter } from "next/navigation";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
-    backgroundColor: theme.palette.common.black,
+    backgroundColor: theme.palette.primary.dark,
     color: theme.palette.common.white,
+    fontWeight: "bold",
   },
   [`&.${tableCellClasses.body}`]: {
     fontSize: 14,
@@ -41,8 +47,12 @@ const Page: NextPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeEditId, setActiveEditId] = useState<string | null>(null);
 
   const fetchData = async () => {
+    setLoading(true);
     const query = new URLSearchParams({
       range: JSON.stringify({
         from: page * rowsPerPage,
@@ -52,13 +62,21 @@ const Page: NextPage = () => {
       sort: JSON.stringify({ field: sortField, order: sortOrder }),
     }).toString();
 
-    const resp = await fetch(`/api/users?${query}`, {
-      method: "GET",
-    });
-    if (resp.ok) {
-      const result = await resp.json();
-      setData(result.data);
-      setTotal(result.total);
+    try {
+      const resp = await fetch(`/api/users?${query}`, {
+        method: "GET",
+      });
+      if (resp.ok) {
+        const result = await resp.json();
+        setData(result.data);
+        setTotal(result.total);
+      } else {
+        setError("Failed to fetch data.");
+      }
+    } catch (e) {
+      setError("An error occurred while fetching data.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,14 +84,12 @@ const Page: NextPage = () => {
     fetchData();
   }, [page, rowsPerPage, sortField, sortOrder, filterText]);
 
-  // Handle sort
   const handleSort = (field: keyof User) => {
     const isAsc = sortField === field && sortOrder === "asc";
     setSortOrder(isAsc ? "desc" : "asc");
     setSortField(field);
   };
 
-  // Handle pagination
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -85,34 +101,59 @@ const Page: NextPage = () => {
     setPage(0);
   };
 
-  const HandleDelete = async (id: string) => {
-    const resp = await fetch("/api/users", {
-      method: "DELETE",
-      body: JSON.stringify({
-        id: id,
-      }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      setData(data.data);
-      setTotal(data.total);
+  const handleDelete = async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resp = await fetch("/api/users", {
+        method: "DELETE",
+        body: JSON.stringify({
+          id: id,
+        }),
+      });
+      if (resp.ok) {
+        await fetchData();
+      } else {
+        setError("Failed to delete user.");
+      }
+    } catch (e) {
+      setError("An error occurred while deleting the user.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (id: string) => {
+    setActiveEditId(id);
+    setError(null);
+    try {
+      router.push(`/static/${id}`);
+    } catch (e) {
+      setError("An error occurred while navigating to the edit page.");
+    } finally {
+      setActiveEditId(null);
     }
   };
 
   const router = useRouter();
 
   return (
-    <Container maxWidth="lg">
-      <h1>Static page</h1>
-      <p>
-        Constructed with prisma on vercel posgressSql database. It shows that
-        the route for this page does not conflict with react admin routes. You
-        can filter, sort, change pagination.
-      </p>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ textAlign: "center", mb: 4 }}>
+        <h1>Static Page</h1>
+        <p>
+          Constructed with Prisma on Vercel PostgreSQL database. It shows that
+          the route for this page does not conflict with React Admin routes. You
+          can filter, sort, and change pagination.
+        </p>
+      </Box>
 
       <Box
         sx={{
           display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
         }}
       >
         <TextField
@@ -120,17 +161,23 @@ const Page: NextPage = () => {
           variant="outlined"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          style={{ marginBottom: "20px", marginTop: "20px" }}
+          sx={{ flex: 1, mr: 2 }}
           InputLabelProps={{
             sx: {
               color: "#518eb9",
               fontSize: "14px",
               fontWeight: 20,
-              "&.MuiOutlinedInput-notchedOutline": { fontSize: "14px" },
             },
           }}
         />
-        <Link href="/static/add-user">Add User</Link>
+        <Button
+          variant="contained"
+          color="primary"
+          component={Link}
+          href="/static/add-user"
+        >
+          Add User
+        </Button>
       </Box>
 
       <TableContainer component={Paper}>
@@ -138,25 +185,37 @@ const Page: NextPage = () => {
           <TableHead>
             <TableRow>
               <StyledTableCell
-                sx={{ display: { xs: "none", sm: "table-cell" } }}
+                sx={{ cursor: "pointer" }}
                 onClick={() => handleSort("name")}
               >
                 Name
               </StyledTableCell>
-              <StyledTableCell onClick={() => handleSort("username")}>
+              <StyledTableCell
+                sx={{ cursor: "pointer" }}
+                onClick={() => handleSort("username")}
+              >
                 Username
               </StyledTableCell>
-              <StyledTableCell onClick={() => handleSort("email")}>
+              <StyledTableCell
+                sx={{ cursor: "pointer" }}
+                onClick={() => handleSort("email")}
+              >
                 Email
               </StyledTableCell>
               <StyledTableCell
-                sx={{ display: { xs: "none", sm: "table-cell" } }}
+                sx={{
+                  cursor: "pointer",
+                  display: { xs: "none", sm: "table-cell" },
+                }}
                 onClick={() => handleSort("phone")}
               >
                 Phone
               </StyledTableCell>
               <StyledTableCell
-                sx={{ display: { xs: "none", sm: "table-cell" } }}
+                sx={{
+                  cursor: "pointer",
+                  display: { xs: "none", sm: "table-cell" },
+                }}
                 onClick={() => handleSort("website")}
               >
                 Website
@@ -165,37 +224,53 @@ const Page: NextPage = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((user) => (
-              <TableRow key={user.id} hover>
-                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                  {user.name}
-                </TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                  {user.phone}
-                </TableCell>
-                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                  {user.website}
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    aria-label="edit"
-                    size="small"
-                    onClick={() => router.push(`/static/${user.id}`)}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    aria-label="delete"
-                    size="small"
-                    onClick={() => HandleDelete(user.id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  <CircularProgress />
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              data.map((user) => (
+                <TableRow key={user.id} hover>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    {user.name}
+                  </TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    {user.phone}
+                  </TableCell>
+                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    {user.website}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      aria-label="edit"
+                      size="small"
+                      sx={{ color: "primary.main", mr: 1 }}
+                      onClick={() => handleEdit(user.id)}
+                      disabled={activeEditId === user.id}
+                    >
+                      {activeEditId === user.id ? (
+                        <CircularProgress size={24} />
+                      ) : (
+                        <EditIcon />
+                      )}
+                    </IconButton>
+                    <IconButton
+                      aria-label="delete"
+                      size="small"
+                      sx={{ color: "primary.main", mr: 1 }}
+                      onClick={() => handleDelete(user.id)}
+                      disabled={loading}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -216,6 +291,18 @@ const Page: NextPage = () => {
           },
         }}
       />
+
+      {error && (
+        <Snackbar
+          open={Boolean(error)}
+          autoHideDuration={6000}
+          onClose={() => setError(null)}
+        >
+          <Alert onClose={() => setError(null)} severity="error">
+            {error}
+          </Alert>
+        </Snackbar>
+      )}
     </Container>
   );
 };

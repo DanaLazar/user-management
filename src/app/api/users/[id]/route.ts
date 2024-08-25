@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prismadb from '../../../../../prisma/prisma'
+import prismadb from '@/prisma/prisma'
 
 export async function GET(request: NextRequest, context: { params: { id: string } }) {
   const id = context.params.id;
-  console.log('id',id)
+  console.log('id', id)
   const user = await prismadb.user.findUnique({
     where: {
       id,
     },
-  })  
+  })
 
-  console.log('user',user)
+  console.log('user', user)
 
   if (!user) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });

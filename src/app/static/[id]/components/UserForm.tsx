@@ -1,11 +1,8 @@
 "use client";
 
-"use client";
-
 import { User } from "@/src/data/types";
 import { useState } from "react";
-import { TextField, Paper, Box } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
+import { TextField, Paper, Box, Typography, IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -55,84 +52,161 @@ export const UserForm = ({ user }: UserFormProps) => {
   };
 
   return (
-    <Paper sx={{ p: 5, mt: 5 }}>
+    <Paper
+      sx={{
+        p: 4,
+        mt: 5,
+        maxWidth: "600px",
+        mx: "auto",
+        boxShadow: "0px 0px 15px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        sx={{ mb: 4, textAlign: "center", color: "#2a4d69" }}
+      >
+        User Profile
+      </Typography>
       <Box
         sx={{
           display: "grid",
-          gap: 1,
+          gap: 2,
           gridTemplateColumns: "repeat(2, 1fr)",
         }}
       >
         <div>
           {editMode ? (
             <TextField
+              label="Name"
               value={editedUser.name ?? user.name}
               onChange={(e) => handleEditChange("name", e.target.value)}
-              sx={{ mb: 5 }}
+              fullWidth
+              sx={{
+                mb: 2,
+                "& .MuiInputLabel-root": {
+                  color: "#518eb9",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                },
+              }}
             />
           ) : (
-            <h2>{user.name}</h2>
+            <Typography variant="h6" sx={{ color: "#333" }}>
+              {user.name}
+            </Typography>
           )}
           {editMode ? (
             <TextField
+              label="Username"
               value={editedUser.username ?? user.username}
               onChange={(e) => handleEditChange("username", e.target.value)}
-              sx={{ mb: 5 }}
+              fullWidth
+              sx={{
+                mb: 2,
+                "& .MuiInputLabel-root": {
+                  color: "#518eb9",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                },
+              }}
             />
           ) : (
-            <h4>{user.username}</h4>
+            <Typography variant="subtitle1" sx={{ color: "#555" }}>
+              {user.username}
+            </Typography>
           )}
           {editMode ? (
-            <div>
-              <IconButton aria-label="save" size="small" onClick={HandleUpdate}>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <IconButton
+                aria-label="save"
+                size="small"
+                onClick={HandleUpdate}
+                sx={{ color: "#1976d2" }}
+              >
                 <SaveIcon />
               </IconButton>
               <IconButton
                 aria-label="cancel"
                 size="small"
                 onClick={cancelEditing}
+                sx={{ color: "#d32f2f" }}
               >
                 <CancelIcon />
               </IconButton>
-            </div>
+            </Box>
           ) : (
-            <div>
+            <Box sx={{ display: "flex", gap: 1 }}>
               <IconButton
                 aria-label="edit"
                 size="small"
                 onClick={() => setEditMode(true)}
+                sx={{ color: "#1976d2" }}
               >
                 <EditIcon />
               </IconButton>
-            </div>
+            </Box>
           )}
         </div>
         <div>
           {editMode ? (
             <TextField
+              label="Phone"
               value={editedUser.phone ?? user.phone}
               onChange={(e) => handleEditChange("phone", e.target.value)}
-              sx={{ mb: 5 }}
+              fullWidth
+              sx={{
+                mb: 2,
+                "& .MuiInputLabel-root": {
+                  color: "#518eb9",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                },
+              }}
             />
           ) : (
-            <p>{user.phone}</p>
+            <Typography variant="body1" sx={{ color: "#666" }}>
+              {user.phone}
+            </Typography>
           )}
           {editMode ? (
             <TextField
+              label="Email"
               value={editedUser.email ?? user.email}
               onChange={(e) => handleEditChange("email", e.target.value)}
-              sx={{ mb: 5 }}
+              fullWidth
+              sx={{
+                mb: 2,
+                "& .MuiInputLabel-root": {
+                  color: "#518eb9",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                },
+              }}
             />
           ) : (
-            <p>{user.email}</p>
+            <Typography variant="body1" sx={{ color: "#666" }}>
+              {user.email}
+            </Typography>
           )}
           {editMode ? (
             <TextField
+              label="Website"
               value={editedUser.website ?? user.website}
               onChange={(e) => handleEditChange("website", e.target.value)}
+              fullWidth
+              sx={{
+                "& .MuiInputLabel-root": {
+                  color: "#518eb9",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                },
+              }}
             />
           ) : (
-            <p>{user.website}</p>
+            <Typography variant="body1" sx={{ color: "#666" }}>
+              {user.website}
+            </Typography>
           )}
         </div>
       </Box>

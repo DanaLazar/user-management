@@ -20,7 +20,7 @@ import {
   UpdateResult,
 } from 'react-admin';
 import { stringify } from 'query-string';
-import { PageRange, QueryResult } from './../data/types';
+import { PageRange, QueryResult } from '@/src/data/types';
 
 const apiUrl = '/api';
 const httpClient = fetchUtils.fetchJson;

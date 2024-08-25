@@ -2,8 +2,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { SortPayload } from 'react-admin';
-import { PageRange } from './../../../data/types';
-import prismadb from '../../../../prisma/prisma'
+import { PageRange } from '@/src/data/types';
+import prismadb from '@/prisma/prisma'
 
 export async function GET(request: NextRequest) {
   const queryString = request.nextUrl.searchParams;
